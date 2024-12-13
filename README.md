@@ -5,6 +5,14 @@ git clone https://github.com/Kingcy78/mod
 
 cd mod 
 
-chmod +x 2
+pkg install nodejs -y
 
-bash 2
+node -v
+
+npm -v
+npm install axios
+
+
+npm init -y
+
+npm start

